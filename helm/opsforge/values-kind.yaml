@@ -1,0 +1,23 @@
+apps:
+  user-api:
+    image:
+      repository: ghcr.io/sayaksatpathi/opsforge-user-api
+      tag: latest
+      pullPolicy: IfNotPresent
+    autoscaling:
+      enabled: true
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPUUtilizationPercentage: 50
+
+  order-api:
+    image:
+      repository: ghcr.io/sayaksatpathi/opsforge-order-api
+      tag: latest
+      pullPolicy: IfNotPresent
+
+  worker:
+    image:
+      repository: ghcr.io/sayaksatpathi/opsforge-worker
+      tag: latest
+      pullPolicy: IfNotPresent
