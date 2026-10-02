@@ -49,7 +49,7 @@ output captured under [`evidence/`](evidence/).
 | 23 | Service mesh (Istio) | 🟠 | Gateway/VirtualService(90-10 canary)/DestinationRule/mTLS STRICT | `servicemesh/istio/` |
 | 24 | CI/CD (GitHub Actions) | 🟢🔵 | Pipeline runs green; lint→test→scan→build→Trivy→SBOM→Cosign→GHCR | GitHub Actions |
 | 25 | DevSecOps | 🔵 | checkov (55 pass/23 triaged), trivy config+secret, syft SBOM, gitleaks (clean) | `evidence/checkov-*.txt`, `sbom-*`, `gitleaks.txt` |
-| 26 | Terraform (AWS IaC) | 🟢 | `fmt` clean; modules coherent; S3/RDS hardened. `validate`/`plan` blocked by proxy | `evidence/checkov-terraform.txt` |
+| 26 | Terraform (AWS IaC) | 🟠🟢 | `fmt` clean + **`terraform validate` passes** (dev + global; native VPC/EKS/RDS/Redis/ECR/IAM) via provider mirror; checkov-scanned. `plan`/`apply` need AWS (not run) | `evidence/terraform-validate.txt` |
 | 27 | Ansible | 🔵 | syntax-check + run on localhost; idempotent (re-run changed=0) | `evidence/ansible-run.txt` |
 | 28 | Backstage (IDP) | 🟠 | Catalog + golden-path software template (scaffolder) | `platform/backstage/` |
 | 29 | High availability | 🟢 | Multi-AZ RDS, PDB, anti-affinity-ready, HPA in config | `terraform/`, `helm/` |
@@ -61,11 +61,19 @@ output captured under [`evidence/`](evidence/).
 
 ---
 
+## Live Kubernetes runtime — why not here, and how to run it
+A real `kind`/K8s cluster **cannot start in the author's cloud sandbox**: its
+`/sys/fs/cgroup` is a tmpfs with no controller hierarchy, so the kubelet fails
+(`required cgroups disabled`). This is an environment limit, not a config bug.
+**It runs on a normal Docker host** (your WSL2/Ubuntu does). A turnkey script,
+[`scripts/kind-demo.sh`](scripts/kind-demo.sh), stands up the full runtime proof
+on your machine: Argo CD GitOps deploy → **HPA autoscaling under CPU load** →
+Argo Rollouts canary → Chaos Mesh pod-kill. The manifests it applies are already
+schema-validated here (kubeconform); the script is `bash -n` clean.
+
 ## What is explicitly NOT done / NOT executed (honest)
-- **No live AWS**: EKS/RDS/VPC never provisioned; `terraform plan`/`apply` not run.
-- **`terraform validate`** not run (proxy blocks provider download) — only `fmt` + `checkov`.
-- **Istio / Backstage / Argo Rollouts / Chaos Mesh**: config written and (where not CRD) schema-validated, but **not run on a live cluster** in this environment.
-- **HPA scale-up under load** not demonstrated on a live cluster (no metrics-server cluster here); k6 load *was* run against the app.
-- Cost numbers in `docs/finops.md` are **estimates**, not real billing.
+- **No live AWS**: EKS/RDS/VPC never provisioned; `terraform plan`/`apply` not run (no AWS credentials, no authorization to spend). ← **impossible in this environment.**
+- **Multi-region DR test** and **real billing/cost**: require live AWS → not done; FinOps numbers are labelled **estimates**.
+- **Istio / Backstage / Argo Rollouts / Chaos Mesh / HPA-under-load**: config schema-validated here; **run via `scripts/kind-demo.sh` on a real Docker host** (not runnable in the author's sandbox — cgroup limit above).
 
 Reproduce every 🔵 result with the commands in the [README](README.md#reproduce-the-evidence).

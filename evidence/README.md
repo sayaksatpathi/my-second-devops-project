@@ -13,6 +13,7 @@ Real output captured from this environment. Nothing here is fabricated.
 | `trivy-config.txt`, `trivy-secrets.txt` | Container/IaC misconfig + secret scan |
 | `sbom-user-api.spdx.json`, `sbom-user-api.txt` | SBOM (16 packages) |
 | `gitleaks.txt` | Secret scan: no leaks found |
+| `terraform-validate.txt` | `terraform validate` passes for dev + global stacks |
 | `screenshots/grafana-api-overview.png` | Golden-signals dashboard, live data |
 | `screenshots/grafana-slo.png` | SLO & error-budget dashboard |
 | `screenshots/prometheus-alerts.png` | ErrorBudgetFastBurn firing |

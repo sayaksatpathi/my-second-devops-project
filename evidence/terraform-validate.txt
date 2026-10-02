@@ -1,0 +1,3 @@
+terraform validate — dev: Success (native VPC/EKS/RDS/Redis/ECR/IAM modules)
+terraform validate — global (S3+DynamoDB state backend): Success
+provider: hashicorp/aws 5.70.0 via filesystem mirror; init -backend=false

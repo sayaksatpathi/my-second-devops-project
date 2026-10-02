@@ -105,12 +105,18 @@ def get_user(user_id: int):
 
 
 @app.get("/work")
-def work(fail_rate: float = 0.0, max_ms: int = 0):
-    """Fault-injection endpoint for load tests and chaos experiments.
-    ?fail_rate=0.1 -> ~10% return HTTP 500; ?max_ms=500 -> up to 500ms latency.
+def work(fail_rate: float = 0.0, max_ms: int = 0, burn_ms: int = 0):
+    """Fault-injection endpoint for load tests, chaos, and autoscaling demos.
+    ?fail_rate=0.1 -> ~10% return HTTP 500
+    ?max_ms=500    -> up to 500ms of (idle) latency
+    ?burn_ms=50    -> busy-loop ~50ms of CPU (drives HPA scale-up)
     """
     import random
 
+    if burn_ms:
+        deadline = time.perf_counter() + min(burn_ms, 1000) / 1000.0
+        while time.perf_counter() < deadline:
+            pass
     if max_ms:
         time.sleep(random.uniform(0, max_ms) / 1000.0)
     if random.random() < fail_rate:
