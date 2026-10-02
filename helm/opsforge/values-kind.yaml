@@ -1,5 +1,6 @@
 apps:
   user-api:
+    existingSecret: ""
     image:
       repository: ghcr.io/sayaksatpathi/opsforge-user-api
       tag: latest
@@ -11,6 +12,7 @@ apps:
       targetCPUUtilizationPercentage: 50
 
   order-api:
+    existingSecret: ""
     image:
       repository: ghcr.io/sayaksatpathi/opsforge-order-api
       tag: latest
