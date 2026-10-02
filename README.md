@@ -1,104 +1,103 @@
-# 🚀 OpsForge — Enterprise Cloud-Native DevSecOps & SRE Platform
+# 🚀 OpsForge — Cloud-Native DevSecOps & SRE Platform
 
-![Status](https://img.shields.io/badge/status-scaffold-yellow)
+[![CI/CD](https://github.com/sayaksatpathi/my-second-devops-project/actions/workflows/ci.yml/badge.svg)](https://github.com/sayaksatpathi/my-second-devops-project/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-Helm%20%2B%20ArgoCD-326CE5?logo=kubernetes&logoColor=white)
 ![IaC](https://img.shields.io/badge/IaC-Terraform-7B42BC?logo=terraform&logoColor=white)
-![Kubernetes](https://img.shields.io/badge/Kubernetes-EKS-326CE5?logo=kubernetes&logoColor=white)
-![GitOps](https://img.shields.io/badge/GitOps-Argo%20CD-EF7B4D?logo=argo&logoColor=white)
-![Observability](https://img.shields.io/badge/Observability-Prometheus%20%2B%20Grafana-E6522C?logo=prometheus&logoColor=white)
+![Observability](https://img.shields.io/badge/Observability-Prometheus%20%7C%20Grafana%20%7C%20Loki%20%7C%20OTel-E6522C?logo=prometheus&logoColor=white)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
 
 A production-style platform where a developer pushes code and the system
-automatically **tests → secures → builds → signs → deploys (GitOps) →
-observes** it on Kubernetes, with SLOs, alerting, chaos testing, and incident
-tooling. It's the "everything, integrated" companion to the focused
-[SRE Reliability Lab](https://github.com/sayaksatpathi/my-first-devops-project).
+**tests → secures → builds → signs → deploys (GitOps) → observes** it on
+Kubernetes, with SLOs, burn-rate alerting, distributed tracing, chaos
+experiments, load testing, and incident tooling.
 
-> ### ⚠️ Project status: **scaffold / work-in-progress**
-> This repo is deliberately built in **phases**, and it's honest about state.
-> Each area below is tagged:
-> - ✅ **implemented & verified** — runs, with evidence
-> - 🟡 **scaffold** — real, reviewable config/code; not yet fully wired/run
-> - 📋 **planned** — directory + design notes, implementation to come
->
-> **The AWS layer is written to be `validate`-clean but is _not_ applied here** —
-> a live EKS/RDS/NAT platform costs real money. Everything that can run **free and
-> locally on `kind`** (app, GitOps, observability, chaos, load) is the path to
-> real, verifiable evidence. See [ADR 0006](docs/adr/0006-local-first-verification.md).
+> **Honesty first.** This repo is built and **actually run** where the
+> environment allows, and it says exactly what is verified vs. designed. The
+> single source of truth is **[`IMPLEMENTATION.md`](IMPLEMENTATION.md)**; real
+> command output and screenshots live in **[`evidence/`](evidence/)**.
+> No AWS infrastructure is deployed (that costs real money and this environment
+> has no AWS access) — the Terraform is production-quality and `fmt`-clean, and
+> everything runnable is proven locally at zero cost.
+
+## What's actually verified (🔵 = run here, with evidence)
+
+- 🔵 **App platform** — user-api/order-api/worker on **Postgres + Redis + Kafka**; persistence, caching, consumer-group + **DLQ** all confirmed.
+- 🔵 **Observability** — Prometheus dashboards, **SLO/error-budget**, a **firing burn-rate alert** in Alertmanager, and **20 distributed traces** in Jaeger (OTel).
+- 🔵 **Load test** — k6: 10,702 reqs @ 152 rps, **p95 = 99 ms, 0% errors**.
+- 🔵 **Resilience** — Postgres backup/restore round-trip; **Redis-failure graceful degradation**.
+- 🔵 **Ansible** — playbook runs on localhost and is **idempotent**.
+- 🔵 **DevSecOps** — checkov, trivy, syft (SBOM), gitleaks (no leaks); CI signs images with Cosign.
+- 🟠 **Config-validated** — Helm (`lint`+`template`+kubeconform), K8s (kubeconform), Argo CD, Istio, Argo Rollouts, Backstage.
+- 🟢 **AWS-ready** — Terraform modules (VPC/EKS/RDS/Redis/ECR/IAM-OIDC), `fmt`-clean, **not applied**.
+
+See the full matrix in [`IMPLEMENTATION.md`](IMPLEMENTATION.md).
 
 ## Architecture
 
-See [`docs/architecture.md`](docs/architecture.md) for the full diagrams
-(delivery pipeline, runtime/observability, infrastructure). In short:
+Full diagrams (delivery pipeline, runtime/observability, infra) in
+[`docs/architecture.md`](docs/architecture.md).
 
 ```text
-push → GitHub Actions (lint→test→SAST→build→Trivy→SBOM→Cosign) → GHCR/ECR
-     → GitOps repo → Argo CD → Kubernetes (EKS / local kind)
-     → Prometheus / Grafana / Loki / OpenTelemetry → SLOs → Alerts → Runbooks
+push → GitHub Actions (lint→test→SAST→build→Trivy→SBOM→Cosign) → GHCR
+     → GitOps (Argo CD) → Kubernetes → Prometheus/Grafana/Loki/OTel
+     → SLOs → burn-rate alerts → runbooks
 ```
 
 ## Repository layout
 
 | Path | Area | Status |
 |------|------|--------|
-| [`app/`](app/) | Demo microservices (FastAPI: user / order / worker) | 🟡 scaffold |
-| [`terraform/`](terraform/) | AWS infra as code (VPC, EKS, RDS, Redis, ECR, IAM/OIDC) | 🟡 scaffold |
-| [`helm/`](helm/) | App packaging (Chart + dev/prod values) | 🟡 scaffold |
-| [`k8s/`](k8s/) | Base manifests + Kustomize overlays | 🟡 scaffold |
-| [`gitops/`](gitops/) | Argo CD app-of-apps + applications | 🟡 scaffold |
-| [`.github/workflows/`](.github/workflows/) | DevSecOps CI/CD pipeline | 🟡 scaffold |
-| [`observability/`](observability/) | Prometheus, Grafana, Loki, OTel, Alertmanager | 🟡 scaffold |
-| [`security/`](security/) | Supply-chain policies (Trivy/SBOM/Cosign) | 🟡 scaffold |
-| [`chaos/`](chaos/) | Chaos Mesh experiments (pod kill, latency) | 🟡 scaffold |
-| [`load/`](load/) | k6 load tests with SLO thresholds | 🟡 scaffold |
-| [`docs/`](docs/) | Architecture, ADRs, runbooks, postmortem template | ✅ written |
-| [`networking/`](networking/) | CloudFront/WAF/ALB/Ingress, TLS/ACM | 📋 planned |
-| [`disaster-recovery/`](disaster-recovery/) | RPO/RTO, backups, region failover | 📋 planned |
-| [`finops/`](finops/) | Cost dashboards & optimisation | 📋 planned |
-| [`servicemesh/`](servicemesh/) | Istio (mTLS, canary, telemetry) | 📋 planned |
-| [`platform/`](platform/) | Backstage internal developer platform | 📋 planned |
+| `app/` | FastAPI services (user/order/worker) + tests | 🔵 verified |
+| `docker-compose.yml` | Full local env (apps + data + observability) | 🟠 config-valid |
+| `terraform/` | AWS IaC (VPC, EKS, RDS, Redis, ECR, IAM/OIDC) | 🟢 AWS-ready |
+| `ansible/` | Node/config management (role + playbook) | 🔵 verified |
+| `helm/` | App chart (securityContext, PDB, HPA, env values) | 🟠 lint+template+kubeconform |
+| `k8s/` | Namespaces, NetworkPolicy, RBAC | 🟠 kubeconform |
+| `gitops/` | Argo CD app-of-apps + Argo Rollouts canary | 🟠 config-valid |
+| `servicemesh/istio/` | Gateway/VirtualService/mTLS/canary | 🟠 config-valid |
+| `observability/` | Prometheus/Grafana/Loki/OTel/Alertmanager | 🔵 verified |
+| `security/` + CI | Trivy/SBOM/Cosign/checkov/gitleaks | 🔵 verified |
+| `chaos/`, `load/` | Chaos Mesh + k6 | 🔵 verified |
+| `platform/backstage/` | IDP catalog + golden-path template | 🟠 config-valid |
+| `docs/` | Architecture, ADRs, 8 runbooks, security/DR/FinOps/troubleshooting | ✅ |
+| `evidence/` | Real captured output + screenshots | ✅ |
 
-## Run it locally (free, no AWS)
-
-The whole platform loop can run on a local Kubernetes cluster at zero cost:
+## Quick start (local, free)
 
 ```bash
-# 1. Run the app's tests
-cd app/user-api && pip install -r requirements-dev.txt && pytest -q
+# Unit tests
+cd app/user-api && pip install -r requirements-dev.txt && pytest -q && cd -
 
-# 2. Bring up a local cluster + Argo CD, which deploys the app via GitOps
-./scripts/kind-bootstrap.sh
-
-# 3. Load-test it
-k6 run load/k6-load.js
+# Full stack (apps + Postgres/Redis/Kafka + Prometheus/Grafana/Jaeger/...)
+docker compose up --build
+#  Grafana   http://localhost:3000 (admin/admin)
+#  Prometheus http://localhost:9090   ·  Alertmanager http://localhost:9093
+#  Jaeger    http://localhost:16686
 ```
 
-Check the Terraform without applying it:
+## Reproduce the evidence
+
+Each 🔵 result is reproducible with one script (needs Docker):
 
 ```bash
-terraform -chdir=terraform fmt -recursive -check
-# (terraform init + validate per environment once providers are available)
+./scripts/integration-test.sh      # user-api + Postgres + Redis
+./scripts/kafka-test.sh            # order-api → Kafka → worker (+ DLQ)
+cd ansible && ansible-playbook playbooks/site.yml   # idempotent config mgmt
+docker run --rm -i -e TARGET=http://host.docker.internal:8000 \
+  --add-host=host.docker.internal:host-gateway grafana/k6 run - < load/load.js
 ```
 
-## Phased roadmap
+Observability screenshots (dashboards, firing alert, traces) were captured
+from the running stack and live in [`evidence/screenshots/`](evidence/screenshots/).
 
-```text
-P1 Foundations (repo, app, CI)      ✅ scaffolded
-P2 Terraform (VPC→EKS→RDS→…)         🟡 written, validate-clean, not applied
-P3 Kubernetes + Helm                 🟡 scaffold
-P4 GitOps (Argo CD)                  🟡 scaffold
-P5 Observability (metrics/logs/trace)🟡 scaffold
-P6 DevSecOps (Trivy/SBOM/Cosign)     🟡 in CI
-P7 SRE (SLOs, error budgets, alerts) 🟡 rules scaffolded
-P8 Chaos + Load                      🟡 scaffold
-P9 HA / DR / FinOps                  📋 planned
-P10 Service Mesh (Istio)             📋 planned
-P11 Platform (Backstage)             📋 planned
+## Validate the config
+
+```bash
+helm lint helm/opsforge && helm template opsforge helm/opsforge >/dev/null
+terraform -chdir=terraform fmt -check -recursive
+docker run --rm -v "$PWD/terraform:/tf:ro" bridgecrew/checkov -d /tf   # IaC scan
 ```
-
-The recommended next step is **P1→P5 locally on `kind`** (the same way the
-[Reliability Lab](https://github.com/sayaksatpathi/my-first-devops-project) was
-verified with real screenshots), then write the AWS layer with `plan` output as
-evidence. Build one phase at a time; keep each one honest and runnable.
 
 ## License
 

@@ -1,0 +1,4 @@
+---
+- name: Announce motd change
+  ansible.builtin.debug:
+    msg: "MOTD updated for env={{ opsforge_env }}"

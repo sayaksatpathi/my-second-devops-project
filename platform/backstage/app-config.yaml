@@ -1,0 +1,9 @@
+# Minimal Backstage config pointing at the OpsForge catalog + template.
+app: { title: OpsForge IDP }
+catalog:
+  locations:
+    - type: file
+      target: ../../platform/backstage/catalog-info.yaml
+    - type: file
+      target: ../../platform/backstage/templates/service/template.yaml
+      rules: [{ allow: [Template] }]

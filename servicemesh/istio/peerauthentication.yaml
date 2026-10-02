@@ -1,0 +1,6 @@
+# Enforce mTLS for all workloads in the namespace.
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata: { name: default, namespace: opsforge }
+spec:
+  mtls: { mode: STRICT }

@@ -1,0 +1,8 @@
+---
+# OpsForge node configuration. Safe to run against localhost (connection=local).
+# In production this targets app_nodes (EKS bootstrap / VMs) over SSH.
+- name: Configure OpsForge nodes
+  hosts: local
+  gather_facts: true
+  roles:
+    - common

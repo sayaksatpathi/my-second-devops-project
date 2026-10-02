@@ -1,0 +1,56 @@
+=== syntax-check ===
+
+playbook: playbooks/site.yml
+=== run #1 (expect changed) ===
+
+PLAY [Configure OpsForge nodes] ************************************************
+
+TASK [Gathering Facts] *********************************************************
+[WARNING]: Host 'localhost' is using the discovered Python interpreter at '/usr/bin/python3.13', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.19/reference_appendices/interpreter_discovery.html for more information.
+ok: [localhost]
+
+TASK [common : Ensure OpsForge base directory exists] **************************
+changed: [localhost]
+
+TASK [common : Render node MOTD from template] *********************************
+changed: [localhost]
+
+TASK [common : Record managed marker (idempotent)] *****************************
+changed: [localhost]
+
+RUNNING HANDLER [common : Announce motd change] ********************************
+ok: [localhost] => {
+    "msg": "MOTD updated for env=dev"
+}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=5    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+=== run #2 (expect idempotent: changed=0) ===
+
+PLAY [Configure OpsForge nodes] ************************************************
+
+TASK [Gathering Facts] *********************************************************
+[WARNING]: Host 'localhost' is using the discovered Python interpreter at '/usr/bin/python3.13', but future installation of another Python interpreter could cause a different interpreter to be discovered. See https://docs.ansible.com/ansible-core/2.19/reference_appendices/interpreter_discovery.html for more information.
+ok: [localhost]
+
+TASK [common : Ensure OpsForge base directory exists] **************************
+ok: [localhost]
+
+TASK [common : Render node MOTD from template] *********************************
+changed: [localhost]
+
+TASK [common : Record managed marker (idempotent)] *****************************
+ok: [localhost]
+
+RUNNING HANDLER [common : Announce motd change] ********************************
+ok: [localhost] => {
+    "msg": "MOTD updated for env=dev"
+}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=5    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+=== idempotency re-run (expect changed=0) ===
+PLAY RECAP *********************************************************************
+localhost                  : ok=4    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   

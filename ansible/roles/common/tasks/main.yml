@@ -1,0 +1,19 @@
+---
+- name: Ensure OpsForge base directory exists
+  ansible.builtin.file:
+    path: "{{ opsforge_base_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Render node MOTD from template
+  ansible.builtin.template:
+    src: motd.j2
+    dest: "{{ opsforge_base_dir }}/motd"
+    mode: "0644"
+  notify: Announce motd change
+
+- name: Record managed marker (idempotent)
+  ansible.builtin.copy:
+    content: "managed-by=ansible env={{ opsforge_env }}\n"
+    dest: "{{ opsforge_base_dir }}/.managed"
+    mode: "0644"

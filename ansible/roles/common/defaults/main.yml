@@ -1,0 +1,4 @@
+---
+opsforge_base_dir: /tmp/opsforge
+opsforge_env: dev
+opsforge_motd: "OpsForge {{ opsforge_env }} node — managed by Ansible"

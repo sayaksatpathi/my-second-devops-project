@@ -1,0 +1,24 @@
+# OpsForge service catalog (Backstage entities).
+apiVersion: backstage.io/v1alpha1
+kind: System
+metadata: { name: opsforge, description: "OpsForge platform" }
+spec: { owner: platform-team }
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: user-api
+  description: User service (FastAPI, Postgres, Redis)
+  annotations:
+    github.com/project-slug: sayaksatpathi/my-second-devops-project
+spec: { type: service, lifecycle: production, owner: platform-team, system: opsforge }
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata: { name: order-api, description: Order service (FastAPI, Postgres, Kafka) }
+spec: { type: service, lifecycle: production, owner: platform-team, system: opsforge }
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata: { name: worker, description: Kafka consumer (retry + DLQ) }
+spec: { type: service, lifecycle: production, owner: platform-team, system: opsforge }

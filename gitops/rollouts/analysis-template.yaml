@@ -1,0 +1,16 @@
+# Promotes the canary only if the 5xx error rate stays below 5%.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata: { name: error-rate, namespace: opsforge }
+spec:
+  metrics:
+    - name: error-rate
+      interval: 30s
+      successCondition: result < 0.05
+      failureLimit: 2
+      provider:
+        prometheus:
+          address: http://prometheus.opsforge-observability:9090
+          query: |
+            sum(rate(http_requests_total{http_status=~"5..",job="user-api"}[2m]))
+            / clamp_min(sum(rate(http_requests_total{job="user-api"}[2m])), 1e-9)

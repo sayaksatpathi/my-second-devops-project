@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata: { name: user-api, namespace: opsforge }
+spec:
+  replicas: 4
+  strategy:
+    canary:
+      steps:
+        - setWeight: 10
+        - pause: { duration: 60 }
+        - setWeight: 50
+        - pause: { duration: 60 }
+        - setWeight: 100
+      # Automated rollback if analysis (error-rate) fails.
+      analysis:
+        templates: [{ templateName: error-rate }]
+        startingStep: 1
+  selector: { matchLabels: { app: user-api } }
+  template:
+    metadata: { labels: { app: user-api } }
+    spec:
+      containers:
+        - name: user-api
+          image: ghcr.io/sayaksatpathi/opsforge-user-api:latest
+          ports: [{ containerPort: 8000 }]
