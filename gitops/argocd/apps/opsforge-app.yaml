@@ -12,6 +12,7 @@ spec:
     helm:
       valueFiles:
         - values-dev.yaml
+        - values-kind.yaml
   destination:
     server: https://kubernetes.default.svc
     namespace: opsforge
