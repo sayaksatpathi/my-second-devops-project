@@ -1,23 +1,29 @@
-# Default values for the OpsForge chart.
+# Default values for the OpsForge app chart.
 image:
   repository: ghcr.io/sayaksatpathi/opsforge-user-api
   tag: latest
   pullPolicy: IfNotPresent
 
 replicaCount: 2
+revisionHistoryLimit: 5
+
+serviceAccount:
+  create: true
+  name: ""
 
 service:
   type: ClusterIP
   port: 80
   targetPort: 8000
 
+env:
+  LOG_LEVEL: INFO
+# Non-secret config. Secrets come from an existing Secret (never hardcoded).
+existingSecret: ""   # e.g. opsforge-db -> DATABASE_URL, REDIS_URL keys
+
 resources:
-  requests:
-    cpu: 50m
-    memory: 64Mi
-  limits:
-    cpu: 250m
-    memory: 256Mi
+  requests: { cpu: 50m, memory: 64Mi }
+  limits:   { cpu: 250m, memory: 256Mi }
 
 autoscaling:
   enabled: true
@@ -25,10 +31,27 @@ autoscaling:
   maxReplicas: 10
   targetCPUUtilizationPercentage: 70
 
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+podSecurityContext:
+  seccompProfile:
+    type: RuntimeDefault
+
+probes:
+  livenessPath: /health
+  readinessPath: /ready
+
 ingress:
   enabled: false
   className: nginx
   host: opsforge.local
-
-probes:
-  path: /health

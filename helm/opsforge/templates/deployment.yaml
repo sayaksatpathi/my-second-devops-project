@@ -5,6 +5,7 @@ metadata:
   labels:
     {{- include "opsforge.labels" . | nindent 4 }}
 spec:
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
@@ -20,19 +21,35 @@ spec:
         prometheus.io/path: "/metrics"
         prometheus.io/port: "{{ .Values.service.targetPort }}"
     spec:
+      serviceAccountName: {{ .Values.serviceAccount.name | default (include "opsforge.name" .) }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: user-api
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.targetPort }}
+          env:
+            {{- range $k, $v := .Values.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          {{- if .Values.existingSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.existingSecret }}
+          {{- end }}
           readinessProbe:
-            httpGet:
-              path: {{ .Values.probes.path }}
-              port: {{ .Values.service.targetPort }}
+            httpGet: { path: {{ .Values.probes.readinessPath }}, port: {{ .Values.service.targetPort }} }
           livenessProbe:
-            httpGet:
-              path: {{ .Values.probes.path }}
-              port: {{ .Values.service.targetPort }}
+            httpGet: { path: {{ .Values.probes.livenessPath }}, port: {{ .Values.service.targetPort }} }
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+      volumes:
+        - name: tmp
+          emptyDir: {}

@@ -6,19 +6,22 @@ resource "aws_db_subnet_group" "this" {
 }
 
 resource "aws_db_instance" "this" {
-  identifier              = "${var.name}-postgres"
-  engine                  = "postgres"
-  engine_version          = var.engine_version
-  instance_class          = var.instance_class
-  allocated_storage       = var.allocated_storage
-  db_name                 = var.db_name
-  username                = var.username
-  password                = var.password # TODO: source from Secrets Manager
-  multi_az                = var.multi_az
-  db_subnet_group_name    = aws_db_subnet_group.this.name
-  vpc_security_group_ids  = var.security_group_ids
-  backup_retention_period = var.backup_retention_days
-  storage_encrypted       = true
-  skip_final_snapshot     = var.skip_final_snapshot
-  tags                    = var.tags
+  identifier                      = "${var.name}-postgres"
+  engine                          = "postgres"
+  engine_version                  = var.engine_version
+  instance_class                  = var.instance_class
+  allocated_storage               = var.allocated_storage
+  db_name                         = var.db_name
+  username                        = var.username
+  password                        = var.password # TODO: source from Secrets Manager
+  multi_az                        = var.multi_az
+  db_subnet_group_name            = aws_db_subnet_group.this.name
+  vpc_security_group_ids          = var.security_group_ids
+  backup_retention_period         = var.backup_retention_days
+  storage_encrypted               = true
+  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
+  deletion_protection             = var.deletion_protection
+  auto_minor_version_upgrade      = true
+  skip_final_snapshot             = var.skip_final_snapshot
+  tags                            = var.tags
 }

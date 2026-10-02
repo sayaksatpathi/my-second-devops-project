@@ -1,0 +1,53 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "schemaVersion": 39,
+  "version": 1,
+  "uid": "api-overview",
+  "title": "OpsForge — API Overview (Golden Signals)",
+  "tags": ["opsforge", "golden-signals"],
+  "time": { "from": "now-15m", "to": "now" },
+  "refresh": "5s",
+  "panels": [
+    {
+      "id": 1, "title": "Request rate (req/s) by service", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "sum(rate(http_requests_total[1m])) by (job)", "legendFormat": "{{job}}" } ]
+    },
+    {
+      "id": 2, "title": "Error rate (% 5xx)", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 0 }, "overrides": [] },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "100 * sum(rate(http_requests_total{http_status=~\"5..\"}[5m])) / clamp_min(sum(rate(http_requests_total[5m])), 0.0000001)", "legendFormat": "error %" } ]
+    },
+    {
+      "id": 3, "title": "Latency p95 / p99 (s)", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "id": 4, "title": "Cache hits vs misses (user-api)", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "fieldConfig": { "defaults": { "unit": "short" }, "overrides": [] },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(cache_hits_total[1m]))", "legendFormat": "hits/s" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(cache_misses_total[1m]))", "legendFormat": "misses/s" }
+      ]
+    }
+  ]
+}

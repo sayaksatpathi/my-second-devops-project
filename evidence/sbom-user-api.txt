@@ -1,0 +1,12 @@
+NAME                                    VERSION  TYPE    
+email-validator                         2.2.0    python  
+fastapi                                 0.115.6  python  
+httpx                                   0.28.1   python  
+opentelemetry-exporter-otlp-proto-http  1.29.0   python  
+opentelemetry-instrumentation-fastapi   0.50b0   python  
+opentelemetry-sdk                       1.29.0   python  
+prometheus-client                       0.21.1   python  
+psycopg2-binary                         2.9.10   python  
+pydantic                                2.10.4   python  
+pydantic-settings                       2.7.1    python  
+pytest                                  8.3.4    python  

@@ -1,0 +1,19 @@
+groups:
+  - name: opsforge_sli
+    interval: 10s
+    rules:
+      - record: sli:http_errors:ratio_rate5m
+        expr: sum(rate(http_requests_total{http_status=~"5.."}[5m])) / clamp_min(sum(rate(http_requests_total[5m])), 1e-9)
+      - record: sli:http_errors:ratio_rate30m
+        expr: sum(rate(http_requests_total{http_status=~"5.."}[30m])) / clamp_min(sum(rate(http_requests_total[30m])), 1e-9)
+      - record: sli:http_errors:ratio_rate1h
+        expr: sum(rate(http_requests_total{http_status=~"5.."}[1h])) / clamp_min(sum(rate(http_requests_total[1h])), 1e-9)
+      - record: sli:http_latency_p95_5m
+        expr: histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))
+      # Error-budget burn rates (SLO: 99.9% availability -> budget 0.001)
+      - record: slo:availability:burnrate5m
+        expr: sli:http_errors:ratio_rate5m / 0.001
+      - record: slo:availability:burnrate30m
+        expr: sli:http_errors:ratio_rate30m / 0.001
+      - record: slo:availability:burnrate1h
+        expr: sli:http_errors:ratio_rate1h / 0.001

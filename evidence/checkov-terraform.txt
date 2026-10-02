@@ -1,0 +1,1 @@
+Passed checks: 55, Failed checks: 23, Skipped checks: 0

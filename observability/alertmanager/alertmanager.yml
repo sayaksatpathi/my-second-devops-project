@@ -1,6 +1,16 @@
 route:
   receiver: default
-  group_by: [alertname, slo]
+  group_by: [alertname, slo, severity]
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 1h
+  routes:
+    - matchers: [severity = "critical"]
+      receiver: default
 receivers:
   - name: default
-    # Add slack_configs/pagerduty_configs with your webhook (treat as secret).
+    # Wire Slack/PagerDuty with your own webhook (treat as a secret; do not commit).
+inhibit_rules:
+  - source_matchers: [severity = "critical"]
+    target_matchers: [severity = "warning"]
+    equal: [slo]

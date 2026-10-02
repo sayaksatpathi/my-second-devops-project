@@ -1,0 +1,48 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "schemaVersion": 39,
+  "version": 1,
+  "uid": "slo-error-budget",
+  "title": "OpsForge — SLO & Error Budget",
+  "tags": ["opsforge", "slo"],
+  "time": { "from": "now-30m", "to": "now" },
+  "refresh": "5s",
+  "panels": [
+    {
+      "id": 1, "title": "Availability SLI (30m) — target 99.9%", "type": "stat",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": 90, "max": 100, "decimals": 3,
+        "thresholds": { "mode": "absolute", "steps": [
+          { "color": "red", "value": null }, { "color": "yellow", "value": 99 }, { "color": "green", "value": 99.9 } ] } }, "overrides": [] },
+      "options": { "colorMode": "background", "graphMode": "area", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "100 * (1 - sli:http_errors:ratio_rate30m)", "legendFormat": "availability" } ]
+    },
+    {
+      "id": 2, "title": "Error budget remaining (30m)", "type": "gauge",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 0 },
+      "fieldConfig": { "defaults": { "unit": "percent", "min": -100, "max": 100, "decimals": 1,
+        "thresholds": { "mode": "absolute", "steps": [
+          { "color": "red", "value": null }, { "color": "orange", "value": 0 }, { "color": "green", "value": 50 } ] } }, "overrides": [] },
+      "options": { "showThresholdMarkers": true, "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [ { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" },
+        "expr": "100 * (1 - (sli:http_errors:ratio_rate30m / 0.001))", "legendFormat": "budget remaining" } ]
+    },
+    {
+      "id": 3, "title": "Error-budget burn rate (1 = on pace, >1 too fast)", "type": "timeseries",
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 7 },
+      "fieldConfig": { "defaults": { "unit": "short",
+        "custom": { "drawStyle": "line", "fillOpacity": 10 },
+        "thresholds": { "mode": "absolute", "steps": [ { "color": "green", "value": null }, { "color": "red", "value": 1 } ] } }, "overrides": [] },
+      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["lastNotNull", "max"] }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "refId": "A", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "slo:availability:burnrate5m", "legendFormat": "5m burn" },
+        { "refId": "B", "datasource": { "type": "prometheus", "uid": "prometheus" }, "expr": "slo:availability:burnrate1h", "legendFormat": "1h burn" }
+      ]
+    }
+  ]
+}

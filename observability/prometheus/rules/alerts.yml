@@ -1,0 +1,38 @@
+groups:
+  - name: opsforge_alerts
+    rules:
+      - alert: TargetDown
+        expr: up == 0
+        for: 1m
+        labels: { severity: critical }
+        annotations:
+          summary: "Target {{ $labels.job }} is down"
+          runbook_url: "https://github.com/sayaksatpathi/my-second-devops-project/blob/main/docs/runbooks/pod-crashloop.md"
+      - alert: HighErrorRate
+        expr: sli:http_errors:ratio_rate5m > 0.05
+        for: 5m
+        labels: { severity: warning }
+        annotations:
+          summary: "Error rate above 5% (5m)"
+          runbook_url: "https://github.com/sayaksatpathi/my-second-devops-project/blob/main/docs/runbooks/high-latency.md"
+      - alert: ErrorBudgetFastBurn
+        expr: slo:availability:burnrate5m > 14.4 and slo:availability:burnrate1h > 14.4
+        for: 2m
+        labels: { severity: critical, slo: availability }
+        annotations:
+          summary: "Availability SLO fast error-budget burn (PAGE)"
+          runbook_url: "https://github.com/sayaksatpathi/my-second-devops-project/blob/main/docs/runbooks/high-latency.md"
+      - alert: HighLatencyP95
+        expr: sli:http_latency_p95_5m > 0.5
+        for: 10m
+        labels: { severity: warning }
+        annotations:
+          summary: "p95 latency above 500ms (5m)"
+          runbook_url: "https://github.com/sayaksatpathi/my-second-devops-project/blob/main/docs/runbooks/high-latency.md"
+      - alert: WorkerMessagesToDLQ
+        expr: increase(worker_messages_failed_total[5m]) > 0
+        for: 1m
+        labels: { severity: warning }
+        annotations:
+          summary: "Worker routed messages to the dead-letter queue"
+          runbook_url: "https://github.com/sayaksatpathi/my-second-devops-project/blob/main/docs/runbooks/kafka-consumer-lag.md"

@@ -1,0 +1,51 @@
+===== DATABASE BACKUP / RESTORE (local pg_dump/pg_restore) =====
+-- rows before backup:
+5
+-- pg_dump -> backup.dump
+   backup OK
+-- simulate data loss: DROP TABLE users
+   dropped
+-- restore from backup
+pg_restore: error: could not execute query: ERROR:  relation "orders" already exists
+Command was: CREATE TABLE public.orders (
+    id integer NOT NULL,
+    user_id integer NOT NULL,
+    item character varying(255) NOT NULL,
+    qty integer NOT NULL
+);
+
+
+pg_restore: error: could not execute query: ERROR:  relation "orders_id_seq" already exists
+Command was: CREATE SEQUENCE public.orders_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+pg_restore: error: could not execute query: ERROR:  multiple primary keys for table "orders" are not allowed
+Command was: ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_pkey PRIMARY KEY (id);
+
+
+pg_restore: warning: errors ignored on restore: 3
+-- rows after restore:
+5
+
+===== CHAOS: Redis failure -> graceful degradation =====
+-- baseline readiness:
+{"status":"ready","database":true,"cache":true}
+-- GET user (cache path):
+{"id":1,"name":"u1","email":"u1@x.com","_cache":"miss"}
+-- KILL redis
+   redis stopped
+-- GET user with redis DOWN (should still serve from Postgres):
+{"id":1,"name":"u1","email":"u1@x.com","_cache":"miss"}
+-- app still healthy?
+{"status":"healthy"}
+-- RECOVER redis
+   redis restarted
+-- readiness after recovery:
+{"status":"ready","database":true,"cache":true}
