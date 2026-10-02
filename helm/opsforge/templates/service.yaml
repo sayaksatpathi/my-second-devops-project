@@ -1,13 +1,19 @@
+{{- range $name, $app := .Values.apps }}
+{{- if $app.service.enabled }}
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "opsforge.name" . }}
+  name: opsforge-{{ $name }}
   labels:
-    {{- include "opsforge.labels" . | nindent 4 }}
+    app.kubernetes.io/name: opsforge-{{ $name }}
 spec:
-  type: {{ .Values.service.type }}
+  type: ClusterIP
   selector:
-    app.kubernetes.io/name: {{ include "opsforge.name" . }}
+    app.kubernetes.io/name: opsforge-{{ $name }}
   ports:
-    - port: {{ .Values.service.port }}
-      targetPort: {{ .Values.service.targetPort }}
+    - name: http
+      port: {{ $app.service.port }}
+      targetPort: {{ $app.service.targetPort }}
+---
+{{- end }}
+{{- end }}

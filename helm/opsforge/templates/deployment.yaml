@@ -1,55 +1,81 @@
+{{- range $name, $app := .Values.apps }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "opsforge.name" . }}
+  name: opsforge-{{ $name }}
   labels:
-    {{- include "opsforge.labels" . | nindent 4 }}
+    app.kubernetes.io/name: opsforge-{{ $name }}
+    app.kubernetes.io/managed-by: Helm
 spec:
-  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
-  {{- if not .Values.autoscaling.enabled }}
-  replicas: {{ .Values.replicaCount }}
-  {{- end }}
+  revisionHistoryLimit: {{ $.Values.revisionHistoryLimit }}
+  replicas: {{ $app.replicas }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "opsforge.name" . }}
+      app.kubernetes.io/name: opsforge-{{ $name }}
   template:
     metadata:
       labels:
-        {{- include "opsforge.labels" . | nindent 8 }}
+        app.kubernetes.io/name: opsforge-{{ $name }}
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/path: "/metrics"
-        prometheus.io/port: "{{ .Values.service.targetPort }}"
+        {{- if $app.service.enabled }}
+        prometheus.io/port: "{{ $app.service.targetPort }}"
+        {{- else }}
+        prometheus.io/port: "9100"
+        {{- end }}
     spec:
-      serviceAccountName: {{ .Values.serviceAccount.name | default (include "opsforge.name" .) }}
+      serviceAccountName: {{ $.Values.serviceAccount.name | default "opsforge" }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: user-api
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+        - name: {{ $name }}
+          image: "{{ $app.image.repository }}:{{ $app.image.tag }}"
+          imagePullPolicy: {{ $app.image.pullPolicy }}
+
+          {{- if $app.service.enabled }}
           ports:
-            - containerPort: {{ .Values.service.targetPort }}
+            - name: http
+              containerPort: {{ $app.service.targetPort }}
+          {{- else }}
+          ports:
+            - name: metrics
+              containerPort: 9100
+          {{- end }}
+
+          {{- if $app.env }}
           env:
-            {{- range $k, $v := .Values.env }}
-            - name: {{ $k }}
-              value: {{ $v | quote }}
+            {{- range $key, $value := $app.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
             {{- end }}
-          {{- if .Values.existingSecret }}
+          {{- end }}
+
+          {{- if $app.existingSecret }}
           envFrom:
             - secretRef:
-                name: {{ .Values.existingSecret }}
+                name: {{ $app.existingSecret }}
           {{- end }}
+
+          {{- if $app.probes.enabled }}
           readinessProbe:
-            httpGet: { path: {{ .Values.probes.readinessPath }}, port: {{ .Values.service.targetPort }} }
+            httpGet:
+              path: {{ $app.probes.readinessPath }}
+              port: {{ $app.service.targetPort }}
           livenessProbe:
-            httpGet: { path: {{ .Values.probes.livenessPath }}, port: {{ .Values.service.targetPort }} }
+            httpGet:
+              path: {{ $app.probes.livenessPath }}
+              port: {{ $app.service.targetPort }}
+          {{- end }}
+
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml $app.resources | nindent 12 }}
+
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          volumeMounts:
-            - { name: tmp, mountPath: /tmp }
-      volumes:
-        - name: tmp
-          emptyDir: {}
+            {{- toYaml $.Values.securityContext | nindent 12 }}
+
+          {{- if eq $name "worker" }}
+          command: ["python", "worker.py"]
+          {{- end }}
+---
+{{- end }}

@@ -1,39 +1,98 @@
-# Default values for the OpsForge app chart.
-image:
-  repository: ghcr.io/sayaksatpathi/opsforge-user-api
-  tag: latest
-  pullPolicy: IfNotPresent
-
-replicaCount: 2
 revisionHistoryLimit: 5
 
 serviceAccount:
   create: true
   name: ""
 
-service:
-  type: ClusterIP
-  port: 80
-  targetPort: 8000
+apps:
 
-env:
-  LOG_LEVEL: INFO
-# Non-secret config. Secrets come from an existing Secret (never hardcoded).
-existingSecret: ""   # e.g. opsforge-db -> DATABASE_URL, REDIS_URL keys
+  user-api:
+    image:
+      repository: 637423616189.dkr.ecr.ap-south-1.amazonaws.com/opsforge-dev/user-api
+      tag: dev
+      pullPolicy: IfNotPresent
+    replicas: 1
+    service:
+      enabled: true
+      port: 80
+      targetPort: 8000
+    existingSecret: opsforge-app-config
+    env:
+      LOG_LEVEL: INFO
+    probes:
+      enabled: true
+      livenessPath: /health
+      readinessPath: /ready
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
+    autoscaling:
+      enabled: false
+    pdb:
+      enabled: false
 
-resources:
-  requests: { cpu: 50m, memory: 64Mi }
-  limits:   { cpu: 250m, memory: 256Mi }
+  order-api:
+    image:
+      repository: 637423616189.dkr.ecr.ap-south-1.amazonaws.com/opsforge-dev/order-api
+      tag: dev
+      pullPolicy: IfNotPresent
+    replicas: 1
+    service:
+      enabled: true
+      port: 80
+      targetPort: 8001
+    existingSecret: opsforge-app-config
+    env:
+      LOG_LEVEL: INFO
+      KAFKA_TOPIC: orders
+    probes:
+      enabled: true
+      livenessPath: /health
+      readinessPath: /ready
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
+    autoscaling:
+      enabled: false
+    pdb:
+      enabled: false
 
-autoscaling:
-  enabled: true
-  minReplicas: 2
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 70
-
-podDisruptionBudget:
-  enabled: true
-  minAvailable: 1
+  worker:
+    image:
+      repository: 637423616189.dkr.ecr.ap-south-1.amazonaws.com/opsforge-dev/worker
+      tag: dev
+      pullPolicy: IfNotPresent
+    replicas: 1
+    service:
+      enabled: false
+    existingSecret: ""
+    env:
+      KAFKA_TOPIC: orders
+      KAFKA_GROUP: opsforge-workers
+      MAX_RETRIES: "3"
+    probes:
+      enabled: false
+      livenessPath: /health
+      readinessPath: /ready
+    resources:
+      requests:
+        cpu: 25m
+        memory: 32Mi
+      limits:
+        cpu: 150m
+        memory: 128Mi
+    autoscaling:
+      enabled: false
+    pdb:
+      enabled: false
 
 securityContext:
   runAsNonRoot: true
@@ -41,17 +100,9 @@ securityContext:
   allowPrivilegeEscalation: false
   readOnlyRootFilesystem: true
   capabilities:
-    drop: ["ALL"]
+    drop:
+      - ALL
 
 podSecurityContext:
   seccompProfile:
     type: RuntimeDefault
-
-probes:
-  livenessPath: /health
-  readinessPath: /ready
-
-ingress:
-  enabled: false
-  className: nginx
-  host: opsforge.local

@@ -18,3 +18,7 @@ node_modules/
 kubeconfig
 .DS_Store
 .terraform.lock.hcl
+
+# Terraform generated plan files
+*.tfplan
+tfplan

@@ -1,11 +1,1 @@
-{{- if .Values.podDisruptionBudget.enabled }}
-apiVersion: policy/v1
-kind: PodDisruptionBudget
-metadata:
-  name: {{ include "opsforge.name" . }}
-spec:
-  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
-  selector:
-    matchLabels:
-      app.kubernetes.io/name: {{ include "opsforge.name" . }}
-{{- end }}
+{{- /* PDB will be enabled per application in a later iteration. */ -}}
