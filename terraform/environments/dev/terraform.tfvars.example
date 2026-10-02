@@ -1,0 +1,4 @@
+# Copy to terraform.tfvars (gitignored) and fill in.
+region      = "ap-south-1"
+environment = "dev"
+db_password = "CHANGE_ME_use_secrets_manager"

@@ -1,0 +1,6 @@
+route:
+  receiver: default
+  group_by: [alertname, slo]
+receivers:
+  - name: default
+    # Add slack_configs/pagerduty_configs with your webhook (treat as secret).

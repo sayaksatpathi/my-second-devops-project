@@ -1,0 +1,107 @@
+name: OpsForge CI/CD
+
+# Lint -> Test -> SAST/secret/dependency scan -> Build -> Trivy -> SBOM ->
+# Sign (Cosign keyless) -> Push to GHCR. GitOps update runs on main.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/opsforge-user-api
+
+jobs:
+  test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install deps
+        working-directory: app/user-api
+        run: pip install -r requirements-dev.txt
+      - name: Tests
+        working-directory: app/user-api
+        run: pytest -q
+
+  security:
+    name: Security scans
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Secret scanning
+      - name: Gitleaks (secrets)
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+      # SAST + dependency scan (report-only until triaged)
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Bandit (SAST) + pip-audit (deps)
+        continue-on-error: true
+        run: |
+          pip install bandit pip-audit
+          bandit -r app/ || true
+          pip-audit -r app/user-api/requirements.txt || true
+
+  build:
+    name: Build, scan, sign, publish
+    needs: [test, security]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write   # for Cosign keyless signing
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build image
+        run: docker build -t "$IMAGE:${{ github.sha }}" app/user-api
+
+      - name: Trivy scan (report)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ env.IMAGE }}:${{ github.sha }}
+          format: table
+          severity: HIGH,CRITICAL
+          exit-code: "0"   # report-only for now; set to 1 to block
+
+      - name: Generate SBOM (Syft)
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.IMAGE }}:${{ github.sha }}
+          format: spdx-json
+          output-file: sbom.spdx.json
+
+      - name: Upload SBOM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom
+          path: sbom.spdx.json
+
+      # --- Publish + sign only on pushes to main ---
+      - name: Log in to GHCR
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          docker tag "$IMAGE:${{ github.sha }}" "$IMAGE:latest"
+          docker push "$IMAGE:${{ github.sha }}"
+          docker push "$IMAGE:latest"
+
+      - name: Install Cosign
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: sigstore/cosign-installer@v3
+
+      - name: Sign image (keyless)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: cosign sign --yes "$IMAGE:${{ github.sha }}"

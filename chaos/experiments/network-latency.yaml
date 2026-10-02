@@ -1,0 +1,14 @@
+# Inject 200ms latency; hypothesis: p95 rises, burn-rate alert fires, recovers.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: opsforge-latency
+  namespace: opsforge
+spec:
+  action: delay
+  mode: all
+  selector:
+    namespaces: [opsforge]
+  delay:
+    latency: "200ms"
+  duration: "5m"

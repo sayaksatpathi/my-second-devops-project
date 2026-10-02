@@ -1,0 +1,6 @@
+apiVersion: v2
+name: opsforge
+description: OpsForge demo application (user-api, order-api, worker)
+type: application
+version: 0.1.0
+appVersion: "0.1.0"

@@ -1,0 +1,16 @@
+# Chaos Mesh experiment: randomly kill an app pod.
+# Hypothesis: Kubernetes reschedules it; SLO stays within budget; no user impact.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: opsforge-pod-kill
+  namespace: opsforge
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces: [opsforge]
+    labelSelectors:
+      app.kubernetes.io/name: opsforge
+  scheduler:
+    cron: "@every 5m"

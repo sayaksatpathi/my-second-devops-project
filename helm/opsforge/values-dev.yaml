@@ -1,0 +1,6 @@
+replicaCount: 1
+autoscaling:
+  enabled: false
+ingress:
+  enabled: true
+  host: opsforge.dev.local

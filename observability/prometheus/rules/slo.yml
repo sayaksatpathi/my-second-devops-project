@@ -1,0 +1,12 @@
+groups:
+  - name: opsforge-slo
+    rules:
+      - record: sli:http_errors:ratio_rate5m
+        expr: sum(rate(http_requests_total{http_status=~"5.."}[5m])) / clamp_min(sum(rate(http_requests_total[5m])), 1e-9)
+      - alert: ErrorBudgetFastBurn
+        expr: (sli:http_errors:ratio_rate5m / 0.001) > 14.4
+        for: 2m
+        labels: { severity: critical, slo: availability }
+        annotations:
+          summary: "Availability SLO fast burn"
+          runbook_url: "https://github.com/sayaksatpathi/my-second-devops-project/blob/main/docs/runbooks/high-latency.md"
