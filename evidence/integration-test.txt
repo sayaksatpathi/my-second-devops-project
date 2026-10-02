@@ -1,0 +1,100 @@
+==> starting postgres + redis
+Unable to find image 'postgres:16-alpine' locally
+16-alpine: Pulling from library/postgres
+509688edf37b: Pulling fs layer
+3ae6141cfd99: Pulling fs layer
+25b77f59fd95: Pulling fs layer
+1b7f9cd581ee: Pulling fs layer
+a88782f92806: Pulling fs layer
+d8d21be4bf02: Pulling fs layer
+81717818649a: Pulling fs layer
+6c25da34e03f: Pulling fs layer
+6117bd39f23f: Pulling fs layer
+e2de96513ba9: Pulling fs layer
+210b280f9556: Pulling fs layer
+e6b147246a89: Download complete
+d8d21be4bf02: Download complete
+81717818649a: Download complete
+6c25da34e03f: Download complete
+6117bd39f23f: Download complete
+509688edf37b: Download complete
+021b01ea4cc2: Download complete
+3ae6141cfd99: Download complete
+1b7f9cd581ee: Download complete
+210b280f9556: Download complete
+a88782f92806: Download complete
+e2de96513ba9: Download complete
+e2de96513ba9: Pull complete
+81717818649a: Pull complete
+3ae6141cfd99: Pull complete
+1b7f9cd581ee: Pull complete
+210b280f9556: Pull complete
+25b77f59fd95: Download complete
+d8d21be4bf02: Pull complete
+6c25da34e03f: Pull complete
+6117bd39f23f: Pull complete
+a88782f92806: Pull complete
+25b77f59fd95: Pull complete
+509688edf37b: Pull complete
+Digest: sha256:721873c34ceb9f8d8fc265984940dc982404c105f19ad51be9fdc5970a6080ea
+Status: Downloaded newer image for postgres:16-alpine
+Unable to find image 'redis:7-alpine' locally
+7-alpine: Pulling from library/redis
+4eb14bae0e1d: Pulling fs layer
+16333ee0c00f: Pulling fs layer
+83234986c742: Pulling fs layer
+7eb50503c2b0: Pulling fs layer
+1522f9c6f453: Pulling fs layer
+9928009b15c8: Pulling fs layer
+4f4fb700ef54: Pulling fs layer
+4f4fb700ef54: Already exists
+83234986c742: Download complete
+7eb50503c2b0: Download complete
+9928009b15c8: Download complete
+4eb14bae0e1d: Download complete
+16333ee0c00f: Download complete
+54779914f171: Download complete
+3beebc06c4ca: Download complete
+1522f9c6f453: Download complete
+83234986c742: Pull complete
+7eb50503c2b0: Pull complete
+16333ee0c00f: Pull complete
+4f4fb700ef54: Pull complete
+9928009b15c8: Pull complete
+4eb14bae0e1d: Pull complete
+1522f9c6f453: Pull complete
+Digest: sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+Status: Downloaded newer image for redis:7-alpine
+==> waiting for postgres
+==> starting user-api
+{"ts": "2026-10-02T14:21:10+0000", "level": "INFO", "logger": "user-api.db", "msg": "connected to postgres", "request_id": "-", "backend": "postgres"}
+{"ts": "2026-10-02T14:21:10+0000", "level": "INFO", "logger": "user-api.cache", "msg": "connected to redis", "request_id": "-"}
+{"ts": "2026-10-02T14:21:10+0000", "level": "INFO", "logger": "user-api.telemetry", "msg": "otel disabled (no OTEL_EXPORTER_OTLP_ENDPOINT)", "request_id": "-"}
+INFO:     Started server process [1721]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:37842 - "GET /health HTTP/1.1" 200 OK
+==> readiness (expect database:true, cache:true)
+INFO:     127.0.0.1:37856 - "GET /ready HTTP/1.1" 200 OK
+{"status":"ready","database":true,"cache":true}
+==> create user (persisted to postgres)
+{"ts": "2026-10-02T14:21:10+0000", "level": "INFO", "logger": "user-api", "msg": "user created", "request_id": "a2c873d0-e707-4ad4-a9c4-617af824a0b0", "user_id": 1}
+INFO:     127.0.0.1:37860 - "POST /users HTTP/1.1" 201 Created
+created id=1
+==> first GET (cache MISS)
+INFO:     127.0.0.1:37868 - "GET /users/1 HTTP/1.1" 200 OK
+{"id":1,"name":"Ada","email":"ada@example.com","_cache":"hit"}
+==> second GET (cache HIT)
+INFO:     127.0.0.1:37876 - "GET /users/1 HTTP/1.1" 200 OK
+{"id":1,"name":"Ada","email":"ada@example.com","_cache":"hit"}
+==> verify row exists directly in postgres
+Ada|ada@example.com
+==> cache metrics
+INFO:     127.0.0.1:37884 - "GET /metrics HTTP/1.1" 200 OK
+cache_hits_total{key_type="user"} 2.0
+==> integration test complete
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [1721]

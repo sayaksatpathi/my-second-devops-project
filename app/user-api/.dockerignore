@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+tests/
+*.md
+.git
+ca-bundle.crt
+Dockerfile.probe

@@ -1,0 +1,105 @@
+==> starting kafka (KRaft) + postgres
+Unable to find image 'apache/kafka:3.8.0' locally
+3.8.0: Pulling from apache/kafka
+c6a83fedfae6: Pulling fs layer
+e9e1a86a14df: Pulling fs layer
+a42500819bdc: Pulling fs layer
+0b502c76566e: Pulling fs layer
+c4c98316ca78: Pulling fs layer
+e2d8f56b95eb: Pulling fs layer
+1673c1a2cfa7: Pulling fs layer
+634d60101085: Pulling fs layer
+c23d170f77ed: Pulling fs layer
+a39822f482a5: Pulling fs layer
+e9e1a86a14df: Download complete
+a42500819bdc: Download complete
+1673c1a2cfa7: Download complete
+c23d170f77ed: Download complete
+a39822f482a5: Download complete
+c6a83fedfae6: Download complete
+0b502c76566e: Download complete
+e2d8f56b95eb: Download complete
+cd1abd17dbe2: Download complete
+c6a83fedfae6: Pull complete
+c4c98316ca78: Download complete
+0b502c76566e: Pull complete
+634d60101085: Download complete
+a42500819bdc: Pull complete
+1673c1a2cfa7: Pull complete
+c4c98316ca78: Pull complete
+634d60101085: Pull complete
+e2d8f56b95eb: Pull complete
+c23d170f77ed: Pull complete
+a39822f482a5: Pull complete
+e9e1a86a14df: Pull complete
+Digest: sha256:c89f315cff967322c5d2021434b32271393cb193aa7ec1d43e97341924e57069
+Status: Downloaded newer image for apache/kafka:3.8.0
+==> waiting for kafka
+==> starting order-api
+INFO:kafka.conn:<BrokerConnection node_id=bootstrap-0 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: connecting to localhost:9092 [('127.0.0.1', 9092) IPv4]
+INFO:kafka.conn:Probing node bootstrap-0 broker version
+INFO:kafka.conn:<BrokerConnection node_id=bootstrap-0 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: Connection complete.
+INFO:kafka.conn:Broker version identified as 2.5.0
+INFO:kafka.conn:Set configuration api_version=(2, 5, 0) to skip auto check_version requests on startup
+INFO:     Started server process [3406]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8001 (Press CTRL+C to quit)
+INFO:     127.0.0.1:35756 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:35760 - "GET /ready HTTP/1.1" 200 OK
+{"status":"ready","kafka":true,"cache":false}
+==> POST a normal order and a poison order (item=__fail__)
+INFO:kafka.conn:<BrokerConnection node_id=1 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: connecting to localhost:9092 [('127.0.0.1', 9092) IPv4]
+INFO:kafka.conn:<BrokerConnection node_id=1 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: Connection complete.
+INFO:kafka.conn:<BrokerConnection node_id=bootstrap-0 host=localhost:9092 <connected> [IPv4 ('127.0.0.1', 9092)]>: Closing connection. 
+INFO:order-api:published order.created id=1
+INFO:     127.0.0.1:35768 - "POST /orders HTTP/1.1" 201 Created
+{"id":1,"user_id":1,"item":"widget","qty":2}
+INFO:order-api:published order.created id=2
+INFO:     127.0.0.1:35780 - "POST /orders HTTP/1.1" 201 Created
+{"id":2,"user_id":1,"item":"__fail__","qty":1}
+==> starting worker for 15s to consume
+INFO:kafka.conn:<BrokerConnection node_id=bootstrap-0 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: connecting to localhost:9092 [('127.0.0.1', 9092) IPv4]
+INFO:kafka.conn:Probing node bootstrap-0 broker version
+INFO:kafka.conn:<BrokerConnection node_id=bootstrap-0 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: Connection complete.
+INFO:kafka.conn:Broker version identified as 2.5.0
+INFO:kafka.conn:Set configuration api_version=(2, 5, 0) to skip auto check_version requests on startup
+INFO:kafka.consumer.subscription_state:Updating subscribed topics to: ('orders',)
+INFO:kafka.conn:<BrokerConnection node_id=bootstrap-0 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: connecting to localhost:9092 [('127.0.0.1', 9092) IPv4]
+INFO:kafka.conn:Probing node bootstrap-0 broker version
+INFO:kafka.conn:<BrokerConnection node_id=bootstrap-0 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: Connection complete.
+INFO:kafka.conn:Broker version identified as 2.5.0
+INFO:kafka.conn:Set configuration api_version=(2, 5, 0) to skip auto check_version requests on startup
+INFO:worker:worker consuming topic=orders group=opsforge-workers
+INFO:kafka.conn:<BrokerConnection node_id=1 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: connecting to localhost:9092 [('127.0.0.1', 9092) IPv4]
+INFO:kafka.conn:<BrokerConnection node_id=1 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: Connection complete.
+INFO:kafka.conn:<BrokerConnection node_id=bootstrap-0 host=localhost:9092 <connected> [IPv4 ('127.0.0.1', 9092)]>: Closing connection. 
+INFO:kafka.cluster:Group coordinator for opsforge-workers is BrokerMetadata(nodeId='coordinator-1', host='localhost', port=9092, rack=None)
+INFO:kafka.coordinator:Discovered coordinator coordinator-1 for group opsforge-workers
+INFO:kafka.coordinator:Starting new heartbeat thread
+INFO:kafka.coordinator.consumer:Revoking previously assigned partitions set() for group opsforge-workers
+INFO:kafka.conn:<BrokerConnection node_id=coordinator-1 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: connecting to localhost:9092 [('127.0.0.1', 9092) IPv4]
+INFO:kafka.conn:<BrokerConnection node_id=coordinator-1 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: Connection complete.
+INFO:kafka.coordinator:(Re-)joining group opsforge-workers
+INFO:kafka.coordinator:Elected group leader -- performing partition assignments using range
+INFO:kafka.coordinator:Successfully joined group opsforge-workers with generation 1
+INFO:kafka.consumer.subscription_state:Updated partition assignment: [TopicPartition(topic='orders', partition=0)]
+INFO:kafka.coordinator.consumer:Setting newly assigned partitions {TopicPartition(topic='orders', partition=0)} for group opsforge-workers
+INFO:worker:processed order id=1
+WARNING:worker:process failed attempt=1: simulated processing failure
+WARNING:worker:process failed attempt=2: simulated processing failure
+WARNING:worker:process failed attempt=3: simulated processing failure
+INFO:kafka.conn:<BrokerConnection node_id=1 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: connecting to localhost:9092 [('127.0.0.1', 9092) IPv4]
+INFO:kafka.conn:<BrokerConnection node_id=1 host=localhost:9092 <connecting> [IPv4 ('127.0.0.1', 9092)]>: Connection complete.
+INFO:kafka.conn:<BrokerConnection node_id=bootstrap-0 host=localhost:9092 <connected> [IPv4 ('127.0.0.1', 9092)]>: Closing connection. 
+ERROR:worker:message routed to DLQ=orders.DLQ
+==> topics (expect orders, orders.DLQ)
+orders
+orders.DLQ
+==> DLQ contents (the poison message)
+{"original": {"event": "order.created", "order": {"id": 2, "user_id": 1, "item": "__fail__", "qty": 1}, "id": "c1ed445f-60e2-4ad9-a753-e67184f5e09a"}, "error": "simulated processing failure"}
+==> kafka test complete
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [3406]
