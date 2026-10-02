@@ -1,3 +1,6 @@
-terraform validate — dev: Success (native VPC/EKS/RDS/Redis/ECR/IAM modules)
-terraform validate — global (S3+DynamoDB state backend): Success
-provider: hashicorp/aws 5.70.0 via filesystem mirror; init -backend=false
+terraform fmt -check -recursive  -> clean
+terraform validate (provider: hashicorp/aws 5.70.0 via filesystem mirror; init -backend=false):
+  environments/dev    -> Success! The configuration is valid.
+  environments/dr     -> Success! The configuration is valid.
+  global              -> Success! The configuration is valid.
+Note: plan/apply require live AWS credentials (not run here, by design).

@@ -1,4 +1,6 @@
-# Dev environment: composes the reusable modules. Scaffold — review before apply.
+# Disaster-recovery environment: mirrors dev/prod in a SECOND region.
+# Stand this up (or keep it warm) and restore RDS from a cross-region snapshot
+# during a DR drill. See docs/disaster-recovery.md.
 provider "aws" {
   region = var.region
 }
@@ -19,9 +21,9 @@ locals {
 module "vpc" {
   source             = "../../modules/vpc"
   name               = local.name
-  cidr_block         = "10.0.0.0/16"
+  cidr_block         = "10.1.0.0/16" # distinct from primary (10.0.0.0/16)
   availability_zones = slice(data.aws_availability_zones.available.names, 0, 2)
-  single_nat_gateway = true # dev: cheaper; prod: false for HA
+  single_nat_gateway = false # DR mirrors prod HA
   tags               = local.tags
 }
 
@@ -44,7 +46,7 @@ module "rds" {
   name       = local.name
   subnet_ids = module.vpc.private_subnet_ids
   password   = var.db_password
-  multi_az   = false # dev
+  multi_az   = true # DR: highly available
   tags       = local.tags
 }
 
@@ -52,20 +54,6 @@ module "redis" {
   source     = "../../modules/redis"
   name       = local.name
   subnet_ids = module.vpc.private_subnet_ids
-  num_nodes  = 1 # dev
+  num_nodes  = 2
   tags       = local.tags
-}
-
-module "iam" {
-  source = "../../modules/iam"
-  name   = local.name
-  tags   = local.tags
-}
-
-# Billing guardrail: a monthly budget with alerts (see modules/budget).
-module "budget" {
-  source             = "../../modules/budget"
-  name               = local.name
-  limit_amount       = var.budget_limit
-  notification_email = var.budget_email
 }

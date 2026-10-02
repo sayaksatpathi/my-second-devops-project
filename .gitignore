@@ -17,3 +17,4 @@ node_modules/
 *.key
 kubeconfig
 .DS_Store
+.terraform.lock.hcl

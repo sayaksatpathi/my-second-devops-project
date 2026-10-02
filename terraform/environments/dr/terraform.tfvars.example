@@ -1,0 +1,3 @@
+region      = "us-east-1"
+environment = "dr"
+db_password = "CHANGE_ME_use_secrets_manager"

@@ -1,0 +1,33 @@
+name: Terraform Plan
+
+# Runs `terraform plan` on PRs that touch terraform/, using GitHub -> AWS OIDC
+# (no long-lived keys). It is SKIPPED until you set the repo variable
+# AWS_ROLE_ARN (the role ARN from terraform/modules/iam), so CI stays green
+# for anyone without AWS configured.
+on:
+  pull_request:
+    paths: ["terraform/**"]
+
+permissions:
+  contents: read
+  id-token: write   # required for OIDC
+
+jobs:
+  plan:
+    name: terraform plan (dev)
+    runs-on: ubuntu-latest
+    if: ${{ vars.AWS_ROLE_ARN != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'ap-south-1' }}
+      - uses: hashicorp/setup-terraform@v3
+      - name: terraform plan
+        working-directory: terraform/environments/dev
+        env:
+          TF_VAR_db_password: ${{ secrets.TF_VAR_DB_PASSWORD }}
+        run: |
+          terraform init
+          terraform plan -no-color

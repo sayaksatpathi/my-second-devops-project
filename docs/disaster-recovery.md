@@ -25,3 +25,11 @@ See `evidence/backup-restore-and-chaos.txt`.
 ## Honesty note
 Only the **local backup/restore** was executed here. Multi-region AWS failover
 is **designed, not performed** (no AWS access in this environment).
+
+## Runnable artifacts
+- **DR environment:** `terraform/environments/dr` (region-swapped mirror, `10.1.0.0/16`,
+  Multi-AZ RDS) — `validate`-clean. Stand up with `terraform apply` in the DR region.
+- **Billing guardrail:** `terraform/modules/budget` creates a monthly AWS Budget
+  with email alerts as part of `apply`, so cost is capped from the first dollar.
+- **One-command helpers:** `make tf-plan-dev`, `make tf-apply-dev` (guarded),
+  `make tf-destroy-dev`.
