@@ -62,12 +62,14 @@ jobs:
         run: docker build -t "$IMAGE:${{ github.sha }}" app/user-api
 
       - name: Trivy scan (report)
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: ${{ env.IMAGE }}:${{ github.sha }}
-          format: table
-          severity: HIGH,CRITICAL
-          exit-code: "0"   # report-only for now; set to 1 to block
+        # Run Trivy from its official image (no action version to resolve).
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:0.58.1 image \
+            --severity HIGH,CRITICAL \
+            --exit-code 0 \
+            "$IMAGE:${{ github.sha }}"   # report-only; set --exit-code 1 to block
 
       - name: Generate SBOM (Syft)
         uses: anchore/sbom-action@v0
