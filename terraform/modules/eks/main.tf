@@ -11,14 +11,14 @@ module "eks" {
   cluster_endpoint_public_access = true
 
   eks_managed_node_groups = {
-  default = {
-    min_size       = var.node_min
-    max_size       = var.node_max
-    desired_size   = var.node_desired
-    instance_types = var.instance_types
-    ami_type       = "AL2023_x86_64_STANDARD"
+    default = {
+      min_size       = var.node_min
+      max_size       = var.node_max
+      desired_size   = var.node_desired
+      instance_types = var.instance_types
+      ami_type       = "AL2023_x86_64_STANDARD"
+    }
   }
-}
 
   tags = var.tags
 }
