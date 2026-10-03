@@ -1,6 +1,8 @@
-# 🚀 OpsForge — Cloud-Native DevSecOps & SRE Platform
+# 🚀 Project 2 — OpsForge
 
-[![CI/CD](https://github.com/sayaksatpathi/my-second-devops-project/actions/workflows/ci.yml/badge.svg)](https://github.com/sayaksatpathi/my-second-devops-project/actions/workflows/ci.yml)
+**Cloud-Native DevSecOps & SRE Platform**
+
+[![CI/CD](https://github.com/sayaksatpathi/opsforge-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/sayaksatpathi/opsforge-platform/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![Kubernetes](https://img.shields.io/badge/Kubernetes-Helm%20%2B%20ArgoCD-326CE5?logo=kubernetes&logoColor=white)
 ![IaC](https://img.shields.io/badge/IaC-Terraform-7B42BC?logo=terraform&logoColor=white)

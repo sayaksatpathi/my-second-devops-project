@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/sayaksatpathi/my-second-devops-project
+    repoURL: https://github.com/sayaksatpathi/opsforge-platform
     targetRevision: main
     path: helm/opsforge
     helm:

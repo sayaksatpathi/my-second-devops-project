@@ -16,8 +16,8 @@ Bash and use `&&`, `.sh`, and `<` redirects.
 
 ## 1. Clone and test the app (no containers)
 ```bash
-git clone https://github.com/sayaksatpathi/my-second-devops-project
-cd my-second-devops-project/app/user-api
+git clone https://github.com/sayaksatpathi/opsforge-platform
+cd opsforge-platform/app/user-api
 python3 -m venv .venv          # Ubuntu blocks system pip; a venv is required
 source .venv/bin/activate
 pip install -r requirements-dev.txt

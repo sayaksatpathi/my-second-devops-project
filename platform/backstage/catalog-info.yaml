@@ -10,7 +10,7 @@ metadata:
   name: user-api
   description: User service (FastAPI, Postgres, Redis)
   annotations:
-    github.com/project-slug: sayaksatpathi/my-second-devops-project
+    github.com/project-slug: sayaksatpathi/opsforge-platform
 spec: { type: service, lifecycle: production, owner: platform-team, system: opsforge }
 ---
 apiVersion: backstage.io/v1alpha1
