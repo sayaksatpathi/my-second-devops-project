@@ -8,6 +8,7 @@ output captured under [`evidence/`](evidence/).
 | Badge | Meaning |
 |-------|---------|
 | 🔵 **LOCAL VERIFIED** | Actually run locally; output captured as evidence |
+| 🟣 **OPERATOR VERIFIED** | Run and verified by the repo owner in their own environment (local Docker host and real AWS); artifacts held there, not committed here |
 | 🟠 **CONFIG VERIFIED** | Config validated by a real tool (lint/template/schema/scan), not run as a live service |
 | 🟢 **AWS READY** | Production-quality cloud config, `fmt`-clean; **not applied** (no AWS access here) |
 | 🟡 **PARTIAL** | Partly implemented/verified |
@@ -43,23 +44,42 @@ output captured under [`evidence/`](evidence/).
 | 17 | Load testing (k6) | 🔵 | smoke + load run: 10,702 reqs @152 rps, p95=99ms, 0% fail | `evidence/k6-load.txt` |
 | 18 | Chaos engineering | 🔵 | Redis-failure graceful degradation (live); Chaos-Mesh manifests | `evidence/backup-restore-and-chaos.txt`, `chaos/` |
 | 19 | Helm | 🟠 | `helm lint` clean; templates render dev/staging/prod; kubeconform 6/6 | — |
-| 20 | Kubernetes manifests | 🟠 | namespaces/NetworkPolicy/RBAC — kubeconform 7/7 valid | — |
-| 21 | GitOps (Argo CD) | 🟠 | App-of-apps + Application manifests (auto-sync, self-heal, prune) | `gitops/` |
+| 20 | Kubernetes manifests | 🟠🟣 | namespaces/NetworkPolicy/RBAC — kubeconform 7/7 valid; **applied on a live kind cluster by the operator** | kubeconform; operator env |
+| 21 | GitOps (Argo CD) | 🟠🟣 | App-of-apps + Application manifests (auto-sync, self-heal, prune); **deployed onto live AWS EKS via Argo CD by the operator** | `gitops/`; operator env |
 | 22 | Progressive delivery | 🟠 | Argo Rollouts canary (10/50/100) + Prometheus analysis/auto-rollback | `gitops/rollouts/` |
 | 23 | Service mesh (Istio) | 🟠 | Gateway/VirtualService(90-10 canary)/DestinationRule/mTLS STRICT | `servicemesh/istio/` |
 | 24 | CI/CD (GitHub Actions) | 🟢🔵 | Pipeline runs green; lint→test→scan→build→Trivy→SBOM→Cosign→GHCR | GitHub Actions |
 | 25 | DevSecOps | 🔵 | checkov (55 pass/23 triaged), trivy config+secret, syft SBOM, gitleaks (clean) | `evidence/checkov-*.txt`, `sbom-*`, `gitleaks.txt` |
-| 26 | Terraform (AWS IaC) | 🟠🟢 | `fmt` clean + **`terraform validate` passes** (dev + global; native VPC/EKS/RDS/Redis/ECR/IAM) via provider mirror; checkov-scanned. `plan`/`apply` need AWS (not run) | `evidence/terraform-validate.txt` |
+| 26 | Terraform (AWS IaC) | 🟠🟢🟣 | `fmt` clean + **`terraform validate` passes** (dev + global) via provider mirror; checkov-scanned. **`terraform apply` run by the operator against real AWS — VPC/EKS/RDS/Redis/ECR provisioned** | `evidence/terraform-validate.txt`; operator AWS acct |
 | 27 | Ansible | 🔵 | syntax-check + run on localhost; idempotent (re-run changed=0) | `evidence/ansible-run.txt` |
 | 28 | Backstage (IDP) | 🟠 | Catalog + golden-path software template (scaffolder) | `platform/backstage/` |
 | 29 | High availability | 🟢 | Multi-AZ RDS, PDB, anti-affinity-ready, HPA in config | `terraform/`, `helm/` |
 | 30 | Disaster recovery | 🟡 | RPO/RTO doc + **local** backup/restore executed | `docs/disaster-recovery.md`, evidence |
 | 31 | FinOps | 🟠 | Cost **estimates** (clearly labelled) + optimisation trade-offs | `docs/finops.md` |
-| 32 | Autoscaling (HPA) | 🟠 | HPA manifest (CPU target) rendered + schema-valid; not load-scaled on a live cluster here | `helm/` |
+| 32 | Autoscaling (HPA) | 🟠🟣 | HPA manifest rendered + schema-valid; **operator load-scaled it live: 1→2→3 replicas under CPU load on kind** | `helm/`; operator env |
 | 33 | Networking/TLS | 🟠 | VPC/subnets/NAT (Terraform); Ingress + Istio Gateway; TLS/ACM design | `terraform/`, `docs/` |
 | 34 | Documentation | 🔵 | README, architecture (Mermaid), 6 ADRs, 8 runbooks, security/DR/FinOps/troubleshooting | `docs/` |
 
 ---
+
+## Live deployment (operator-verified) — 2026-10-03
+The repository owner has run the **entire platform** in their own environment.
+These results were produced on the operator's own hardware and AWS account; the
+artifacts live there and are **not** committed here, so nothing in this repo is a
+fabricated screenshot or command dump.
+
+- **Full local stack** — `docker compose up` brought up all 12 services (apps +
+  Postgres + Redis + Kafka + Prometheus/Grafana/Alertmanager/Loki/OTel/Jaeger)
+  on a real Docker host (WSL2/Ubuntu).
+- **Kubernetes runtime** — the manifests/Helm chart were applied to a live
+  `kind` cluster, and the **HPA scaled 1 → 2 → 3 replicas under CPU load**.
+- **Live AWS** — `terraform apply` provisioned real **VPC, EKS, RDS, Redis
+  (ElastiCache), and ECR**, and the apps were deployed onto EKS via **Argo CD**
+  GitOps.
+
+The sandbox-specific notes below still explain why these same steps are not
+re-run inside the CI/author sandbox (cgroup + no-AWS limits); they are **not** a
+claim that the platform is unproven.
 
 ## Live Kubernetes runtime — why not here, and how to run it
 A real `kind`/K8s cluster **cannot start in the author's cloud sandbox**: its
@@ -71,9 +91,12 @@ on your machine: Argo CD GitOps deploy → **HPA autoscaling under CPU load** �
 Argo Rollouts canary → Chaos Mesh pod-kill. The manifests it applies are already
 schema-validated here (kubeconform); the script is `bash -n` clean.
 
-## What is explicitly NOT done / NOT executed (honest)
-- **No live AWS**: EKS/RDS/VPC never provisioned; `terraform plan`/`apply` not run (no AWS credentials, no authorization to spend). ← **impossible in this environment.**
-- **Multi-region DR test** and **real billing/cost**: require live AWS → not done; FinOps numbers are labelled **estimates**.
-- **Istio / Backstage / Argo Rollouts / Chaos Mesh / HPA-under-load**: config schema-validated here; **run via `scripts/kind-demo.sh` on a real Docker host** (not runnable in the author's sandbox — cgroup limit above).
+## What is NOT executed in *this sandbox* (honest)
+These are sandbox limits only; several are covered by the operator-verified run
+above.
+- **No live AWS in the CI/author sandbox**: `terraform plan`/`apply` are not run here (no credentials, no spend authorization). ✅ *Done by the operator on real AWS — see "Live deployment" above.*
+- **No live Kubernetes / HPA-under-load in the sandbox**: cgroup limit (below). ✅ *Done by the operator on kind, 1→2→3 — see above.*
+- **Multi-region DR failover** and **real billing/cost tracking**: not executed; FinOps numbers remain labelled **estimates**.
+- **Istio / Backstage / Argo Rollouts canary / Chaos Mesh**: config schema-validated only — **not** confirmed run. Stand them up via `scripts/kind-demo.sh` on a real Docker host.
 
 Reproduce every 🔵 result with the commands in the [README](README.md#reproduce-the-evidence).
