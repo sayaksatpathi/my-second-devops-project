@@ -1,5 +1,9 @@
 ingress:
   enabled: false
+  className: ""
+  host: ""
+  # Which app in .Values.apps the ingress routes to (defaults to user-api).
+  serviceName: user-api
 
 revisionHistoryLimit: 5
 

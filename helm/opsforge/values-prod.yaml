@@ -1,8 +1,27 @@
-replicaCount: 3
-autoscaling:
-  enabled: true
-  minReplicas: 3
-  maxReplicas: 20
+# Production overrides for the OpsForge umbrella chart.
+# Deep-merged onto values.yaml; only the keys that differ from dev are set here.
 ingress:
   enabled: true
+  className: alb
   host: opsforge.example.com
+  serviceName: user-api
+
+apps:
+  user-api:
+    replicas: 3
+    autoscaling:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 20
+      targetCPUUtilizationPercentage: 70
+
+  order-api:
+    replicas: 3
+    autoscaling:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 20
+      targetCPUUtilizationPercentage: 70
+
+  worker:
+    replicas: 2
