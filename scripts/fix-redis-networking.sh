@@ -58,7 +58,7 @@ if [[ "$REDIS_SG_ID" == "None" || -z "$REDIS_SG_ID" ]]; then
       --vpc-id "$VPC_ID" \
       --query 'GroupId' \
       --output text
-  )
+  )"
 
   echo "Created: $REDIS_SG_ID"
 else
